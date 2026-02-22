@@ -1,0 +1,5 @@
+/* MapView outer wrapper — fills mapArea via absolute positioning */
+.mapWrapper {
+    position: absolute;
+    inset: 0;
+}

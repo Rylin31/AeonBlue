@@ -1,0 +1,24 @@
+.ring {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.ring svg {
+    display: block;
+}
+
+.centerText {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.value {
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--teal);
+    line-height: 1;
+}

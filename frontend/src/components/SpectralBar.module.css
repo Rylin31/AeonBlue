@@ -1,0 +1,34 @@
+.wrapper {
+    position: relative;
+    height: 42px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+.bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 38px;
+}
+
+.bar {
+    background: var(--teal);
+    border-radius: 1px 1px 0 0;
+    flex-shrink: 0;
+    transition: opacity 0.3s ease;
+}
+
+.bar.bright {
+    background: #ffffff;
+    opacity: 1 !important;
+    box-shadow: 0 0 6px rgba(255, 255, 255, 0.6);
+}
+
+.baseline {
+    width: 100%;
+    height: 1px;
+    background: var(--border-subtle);
+    margin-top: 2px;
+}
