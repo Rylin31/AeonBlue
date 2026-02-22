@@ -1,0 +1,307 @@
+/* ── Sheet: Google Maps "Place Details" pane ── */
+.sheet {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: var(--sheet-w);
+    background: var(--white);
+    box-shadow: var(--shadow-3);
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    animation: slideInLeft 0.35s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+/* ── Back button ── */
+.back {
+    position: absolute;
+    top: 16px;
+    right: -52px;
+    width: 40px;
+    height: 40px;
+    background: var(--white);
+    border: none;
+    border-radius: 50%;
+    box-shadow: var(--shadow-1);
+    color: var(--slate-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 5;
+    transition: var(--transition);
+}
+
+.back:hover {
+    background: var(--surface);
+    color: var(--slate);
+}
+
+/* ── Content ── */
+.content {
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: 24px;
+}
+
+/* ── Hero Section ── */
+.heroSection {
+    padding: 24px 24px 20px;
+}
+
+.heroTop {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+
+.title {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--slate);
+    letter-spacing: -0.01em;
+}
+
+.timeBadge {
+    font-size: 12px;
+    color: var(--muted-light);
+    background: var(--surface);
+    padding: 4px 10px;
+    border-radius: var(--radius-pill);
+    font-weight: 500;
+    flex-shrink: 0;
+}
+
+.subtitle {
+    font-size: 14px;
+    color: var(--muted-light);
+    margin-bottom: 20px;
+}
+
+/* ── Summary Row ── */
+.summaryRow {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.summaryInfo {
+    flex: 1;
+    min-width: 0;
+}
+
+.vesselName {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--slate);
+    margin-bottom: 4px;
+}
+
+.vesselMeta {
+    font-size: 13px;
+    color: var(--muted-light);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.aisLock {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--green-ok);
+    background: var(--green-dim);
+    padding: 2px 7px;
+    border-radius: var(--radius-pill);
+    margin-left: 6px;
+}
+
+.modelBadge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--sea-blue);
+    background: var(--sea-blue-dim);
+    padding: 3px 10px;
+    border-radius: var(--radius-pill);
+    margin-top: 8px;
+}
+
+/* ── Quick actions ── */
+.quickActions {
+    display: flex;
+    gap: 8px;
+    padding: 0 24px 16px;
+}
+
+.actionChip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: var(--surface);
+    border: none;
+    border-radius: var(--radius-pill);
+    color: var(--sea-blue);
+    font-size: 13px;
+    font-weight: 500;
+    font-family: var(--font-main);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.actionChip:hover {
+    background: var(--surface-hover);
+}
+
+.toast {
+    margin: 0 24px 12px;
+    padding: 10px 14px;
+    background: var(--slate);
+    color: var(--white);
+    font-size: 13px;
+    border-radius: var(--radius-md);
+    animation: fadeInUp 0.2s ease both;
+}
+
+/* ── Divider ── */
+.dividerLine {
+    height: 1px;
+    background: var(--divider);
+    margin: 0 24px;
+}
+
+/* ── Expand Button ── */
+.expandBtn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 16px 24px;
+    border: none;
+    background: transparent;
+    color: var(--sea-blue);
+    font-size: 14px;
+    font-weight: 500;
+    font-family: var(--font-main);
+    cursor: pointer;
+    transition: var(--transition);
+    letter-spacing: 0.01em;
+}
+
+.expandBtn:hover {
+    background: var(--surface);
+}
+
+/* ── Details ── */
+.details {
+    animation: fadeInUp 0.25s ease both;
+}
+
+.section {
+    padding: 12px 24px 20px;
+}
+
+.sectionLabel {
+    margin-bottom: 12px;
+}
+
+/* ── Vessel grid ── */
+.grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    border-top: 1px solid var(--divider);
+}
+
+.gridCell {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--divider);
+}
+
+.gridCell:nth-child(odd) {
+    padding-right: 16px;
+}
+
+.gridCell:nth-child(even) {
+    padding-left: 16px;
+    border-left: 1px solid var(--divider);
+}
+
+.gridKey {
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.gridVal {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--slate);
+}
+
+/* ── Analysis rows ── */
+.rows {
+    display: flex;
+    flex-direction: column;
+}
+
+.row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--divider);
+}
+
+.row:last-child {
+    border-bottom: none;
+}
+
+.rowKey {
+    font-size: 14px;
+    color: var(--muted-light);
+}
+
+.rowVal {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--slate);
+}
+
+/* ── Spectral ── */
+.spectralHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.spectralHeader .sectionLabel {
+    margin-bottom: 0;
+}
+
+.classTag {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--sea-blue);
+    background: var(--sea-blue-dim);
+    padding: 3px 10px;
+    border-radius: var(--radius-pill);
+    letter-spacing: 0.06em;
+}
+
+.spectralNote {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 10px;
+    line-height: 1.5;
+    font-style: italic;
+}

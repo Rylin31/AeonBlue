@@ -7,7 +7,7 @@
     display: block;
 }
 
-.centerText {
+.center {
     position: absolute;
     inset: 0;
     display: flex;
@@ -16,9 +16,8 @@
 }
 
 .value {
-    font-family: var(--font-display);
     font-size: 16px;
-    font-weight: 700;
-    color: var(--teal);
+    font-weight: 600;
+    color: var(--sea-blue);
     line-height: 1;
 }

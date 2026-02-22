@@ -1,6 +1,6 @@
 .wrapper {
     position: relative;
-    height: 42px;
+    height: 44px;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
@@ -14,21 +14,19 @@
 }
 
 .bar {
-    background: var(--teal);
-    border-radius: 1px 1px 0 0;
+    background: var(--sea-blue);
+    border-radius: 2px 2px 0 0;
     flex-shrink: 0;
     transition: opacity 0.3s ease;
 }
 
 .bar.bright {
-    background: #ffffff;
-    opacity: 1 !important;
-    box-shadow: 0 0 6px rgba(255, 255, 255, 0.6);
+    background: var(--sea-blue-light);
 }
 
 .baseline {
     width: 100%;
     height: 1px;
-    background: var(--border-subtle);
-    margin-top: 2px;
+    background: var(--divider);
+    margin-top: 3px;
 }

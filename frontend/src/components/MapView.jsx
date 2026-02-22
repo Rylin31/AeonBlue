@@ -1,42 +1,62 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 
-// ── All coords verified open-water, Singapore Strait shipping lane ─────────
-const CENTER = [103.78, 1.15]   // MapLibre uses [lng, lat]
-const ZOOM = 10
-const VESSEL_SOURCE = [103.57, 1.05]
+// ── Coords: Singapore Strait — all positions in water ──────────
+const CENTER = [103.82, 1.22]
+const ZOOM = 10.8
+const VESSEL_SOURCE = [103.68, 1.12]
 
 const SPILL_POLYGON = [
-    [103.730, 1.175],
-    [103.805, 1.215],
-    [103.900, 1.195],
-    [103.875, 1.130],
-    [103.760, 1.110],
-    [103.730, 1.175],  // close the ring
+    [103.750, 1.200], [103.810, 1.240], [103.870, 1.230],
+    [103.860, 1.180], [103.780, 1.170], [103.750, 1.200],
 ]
 
 const VESSELS = [
-    { pos: [103.640, 1.215], label: 'MV Tanker B' },
-    { pos: [103.960, 1.210], label: 'MV Cargo C' },
-    { pos: [103.980, 1.065], label: 'MV Carrier A' },
-    { pos: [103.490, 1.130], label: 'MV Bulk D' },
+    { pos: [103.62, 1.26], label: 'MV Tanker B', speed: '8.2 kts', heading: '142°' },
+    { pos: [103.92, 1.26], label: 'MV Cargo C', speed: '14.6 kts', heading: '278°' },
+    { pos: [103.55, 1.18], label: 'MV Carrier A', speed: '11.1 kts', heading: '035°' },
+    { pos: [103.95, 1.18], label: 'MV Bulk D', speed: '6.8 kts', heading: '190°' },
 ]
+
+const SOURCE_VESSEL = {
+    pos: VESSEL_SOURCE,
+    label: 'MV Neptune',
+    imo: '9462781',
+    flag: 'Panama',
+    flagCode: 'PA',
+    speed: '12.4 kts',
+    heading: '067°',
+    type: 'Oil Tanker',
+}
 
 const TRACKS = [
-    { coords: [VESSEL_SOURCE, [103.730, 1.175]] },
-    { coords: [VESSEL_SOURCE, [103.900, 1.195]] },
-    { coords: [VESSEL_SOURCE, [103.805, 1.215]] },
+    { coords: [VESSEL_SOURCE, [103.750, 1.200]] },
+    { coords: [VESSEL_SOURCE, [103.870, 1.230]] },
+    { coords: [VESSEL_SOURCE, [103.810, 1.240]] },
 ]
 
-const DRIFT_LINE = [
-    [103.730, 1.175],
-    [103.640, 1.215],
-]
+const DRIFT_LINE = [[103.750, 1.200], [103.62, 1.26]]
 
-export default function MapView() {
+export default function MapView({ activeLayer = 'visual', onSpillClick, onVesselLock, onMapReady }) {
     const containerRef = useRef(null)
     const mapRef = useRef(null)
+
+    // Layer toggle
+    useEffect(() => {
+        const map = mapRef.current
+        if (!map || !map.isStyleLoaded()) return
+
+        if (activeLayer === 'sar') {
+            map.setPaintProperty('satellite', 'raster-saturation', -1)
+            map.setPaintProperty('satellite', 'raster-contrast', 0.35)
+            map.setPaintProperty('satellite', 'raster-brightness-max', 0.65)
+        } else {
+            map.setPaintProperty('satellite', 'raster-saturation', -0.15)
+            map.setPaintProperty('satellite', 'raster-contrast', 0.1)
+            map.setPaintProperty('satellite', 'raster-brightness-max', 1)
+        }
+    }, [activeLayer])
 
     useEffect(() => {
         if (mapRef.current) return
@@ -50,245 +70,226 @@ export default function MapView() {
                 sources: {
                     'esri-satellite': {
                         type: 'raster',
-                        tiles: [
-                            'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
-                        ],
+                        tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
                         tileSize: 256,
                         attribution: 'Tiles © Esri',
                         maxzoom: 18,
-                    }
+                    },
                 },
                 layers: [
-                    // Dark ocean background so globe looks seamless
+                    { id: 'bg', type: 'background', paint: { 'background-color': 'rgba(0,0,0,0)' } },
                     {
-                        id: 'background',
-                        type: 'background',
-                        paint: { 'background-color': '#0a121e' },
+                        id: 'satellite', type: 'raster', source: 'esri-satellite',
+                        paint: { 'raster-saturation': -0.15, 'raster-contrast': 0.1 },
                     },
-                    {
-                        id: 'satellite',
-                        type: 'raster',
-                        source: 'esri-satellite',
-                        minzoom: 0,
-                        maxzoom: 18,
-                    }
                 ],
-                // Globe projection — sphere at low zoom, flattens when zoomed in
-                projection: { type: 'globe' },
             },
             center: CENTER,
             zoom: ZOOM,
+            minZoom: 3,
+            maxPitch: 60,
             attributionControl: false,
         })
 
         mapRef.current = map
+        onMapReady?.(map)
 
-        // Attribution bottom-right
-        map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-right')
+        // No attribution control — custom branding added in JSX
 
-        // Zoom control bottom-left
-        map.addControl(new maplibregl.NavigationControl({ showCompass: true }), 'bottom-left')
+        // Globe projection must be set after style loads in MapLibre v5+
+        map.on('style.load', () => {
+            map.setProjection({ type: 'globe' })
+        })
 
         map.on('load', () => {
-            // ── Oil spill polygon ─────────────────────────────────────────────
+            // ── Oil spill polygon — high-contrast on dark water ──────────
             map.addSource('spill-area', {
                 type: 'geojson',
-                data: {
-                    type: 'Feature',
-                    geometry: {
-                        type: 'Polygon',
-                        coordinates: [SPILL_POLYGON],
-                    },
-                },
+                data: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [SPILL_POLYGON] } },
             })
 
+            // Bright translucent fill that stands out on dark ocean
             map.addLayer({
-                id: 'spill-fill',
-                type: 'fill',
-                source: 'spill-area',
-                paint: {
-                    'fill-color': '#00d2be',
-                    'fill-opacity': 0.25,
-                },
+                id: 'spill-fill', type: 'fill', source: 'spill-area',
+                paint: { 'fill-color': '#4DA8DA', 'fill-opacity': 0.45 },
             })
 
+            // Visible solid border
             map.addLayer({
-                id: 'spill-border',
-                type: 'line',
-                source: 'spill-area',
-                paint: {
-                    'line-color': '#00e5d0',
-                    'line-width': 2,
-                },
+                id: 'spill-border', type: 'line', source: 'spill-area',
+                paint: { 'line-color': '#FFFFFF', 'line-width': 2, 'line-opacity': 0.8 },
             })
 
-            // ── Track lines (chartreuse dashed) ───────────────────────────────
+            // Click → open details
+            map.on('click', 'spill-fill', () => {
+                onSpillClick?.()
+                map.setPaintProperty('spill-fill', 'fill-opacity', 0.65)
+                setTimeout(() => map.setPaintProperty('spill-fill', 'fill-opacity', 0.45), 400)
+            })
+
+            map.on('mouseenter', 'spill-fill', () => {
+                map.getCanvas().style.cursor = 'pointer'
+                map.setPaintProperty('spill-fill', 'fill-opacity', 0.55)
+            })
+            map.on('mouseleave', 'spill-fill', () => {
+                map.getCanvas().style.cursor = ''
+                map.setPaintProperty('spill-fill', 'fill-opacity', 0.45)
+            })
+
+            // ── Lagrangian paths — sage dashed lines ──
             TRACKS.forEach((track, i) => {
                 map.addSource(`track-${i}`, {
                     type: 'geojson',
-                    data: {
-                        type: 'Feature',
-                        geometry: {
-                            type: 'LineString',
-                            coordinates: track.coords,
-                        },
-                    },
+                    data: { type: 'Feature', geometry: { type: 'LineString', coordinates: track.coords } },
                 })
-
                 map.addLayer({
-                    id: `track-${i}`,
-                    type: 'line',
-                    source: `track-${i}`,
-                    paint: {
-                        'line-color': '#b8ff3a',
-                        'line-width': 1.8,
-                        'line-opacity': 0.85,
-                        'line-dasharray': [4, 3],
-                    },
+                    id: `track-${i}`, type: 'line', source: `track-${i}`,
+                    paint: { 'line-color': '#A8D8D8', 'line-width': 2, 'line-opacity': 0.8, 'line-dasharray': [6, 4] },
                 })
             })
 
-            // ── Drift line (cyan dashed) ──────────────────────────────────────
+            // ── Drift line ──
             map.addSource('drift-line', {
                 type: 'geojson',
-                data: {
-                    type: 'Feature',
-                    geometry: {
-                        type: 'LineString',
-                        coordinates: DRIFT_LINE,
-                    },
-                },
+                data: { type: 'Feature', geometry: { type: 'LineString', coordinates: DRIFT_LINE } },
             })
-
             map.addLayer({
-                id: 'drift-line',
-                type: 'line',
-                source: 'drift-line',
-                paint: {
-                    'line-color': '#00d2be',
-                    'line-width': 1.5,
-                    'line-opacity': 0.65,
-                    'line-dasharray': [3, 3],
-                },
+                id: 'drift-line', type: 'line', source: 'drift-line',
+                paint: { 'line-color': '#4DA8DA', 'line-width': 1.5, 'line-opacity': 0.6, 'line-dasharray': [4, 4] },
             })
         })
 
-        // ── Source vessel marker (MV Neptune) with label ─────────────────────
-        const sourceEl = document.createElement('div')
-        sourceEl.innerHTML = `
-      <div style="display:flex;flex-direction:column;align-items:center;pointer-events:none">
-        <div style="background:#b8ff3a;color:#0a0d12;font-size:8px;font-weight:800;
-          padding:3px 7px;border-radius:3px;white-space:nowrap;font-family:Inter,sans-serif;
-          letter-spacing:.04em;margin-bottom:3px;line-height:1.5;text-align:center;
-          box-shadow:0 2px 8px rgba(0,0,0,.6)">
-          PROBABLY SOURCE<br>MV Neptune
-        </div>
-        <div style="width:0;height:0;border-left:5px solid transparent;
-          border-right:5px solid transparent;border-top:6px solid #b8ff3a;margin-bottom:1px"></div>
-        <div style="width:12px;height:12px;background:#b8ff3a;border:2px solid rgba(255,255,255,.85);
-          border-radius:2px;box-shadow:0 0 14px #b8ff3a;transform:rotate(45deg)"></div>
-      </div>`
-        new maplibregl.Marker({ element: sourceEl, anchor: 'bottom' })
+        // ── Source vessel pin (bright red for visibility) ─────────────
+        const pinWrapper = document.createElement('div')
+        pinWrapper.style.cssText = 'cursor:pointer;display:flex;flex-direction:column;align-items:center;'
+        pinWrapper.innerHTML = `
+          <div style="background:white;color:#3C4043;font-size:11px;font-weight:600;
+            padding:4px 10px;border-radius:8px;margin-bottom:4px;white-space:nowrap;
+            box-shadow:0 1px 3px rgba(60,64,67,.3),0 1px 3px 1px rgba(60,64,67,.15);
+            font-family:Inter,sans-serif;letter-spacing:.02em;">
+            MV Neptune
+          </div>
+          <svg width="28" height="40" viewBox="0 0 28 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M14 0C6.268 0 0 6.268 0 14c0 10.5 14 26 14 26s14-15.5 14-26C28 6.268 21.732 0 14 0z" fill="#E25050"/>
+            <circle cx="14" cy="13" r="6" fill="white" opacity="0.95"/>
+            <path d="M11.5 16l2.5-7 2.5 7M11.5 16h5M12.5 13.5h3" stroke="#E25050" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>`
+        const pinEl = pinWrapper
+
+        pinEl.addEventListener('click', () => onVesselLock?.(SOURCE_VESSEL))
+
+        new maplibregl.Marker({ element: pinEl, anchor: 'bottom' })
             .setLngLat(VESSEL_SOURCE)
             .addTo(map)
 
-        // ── Other vessel markers ────────────────────────────────────────────
-        VESSELS.forEach(({ pos, label }) => {
-            const vesselEl = document.createElement('div')
-            vesselEl.style.cssText = `
-        width:10px;height:10px;
-        background:#ff8c00;border:2px solid rgba(255,255,255,.75);border-radius:2px;
-        box-shadow:0 0 10px #ff8c00;transform:rotate(45deg);cursor:pointer;
-      `
-            vesselEl.title = label
-
-            const marker = new maplibregl.Marker({ element: vesselEl })
+        // ── Other vessel markers (fixed-size, no CSS transforms) ─────
+        VESSELS.forEach(({ pos, label, speed, heading }) => {
+            const dot = document.createElement('div')
+            dot.style.cssText = `
+                width:12px;height:12px;background:#6B8E8E;border:2.5px solid white;
+                border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,0.25);cursor:pointer;
+            `
+            const marker = new maplibregl.Marker({ element: dot, anchor: 'center' })
                 .setLngLat(pos)
                 .addTo(map)
 
-            // Popup on hover
             const popup = new maplibregl.Popup({
-                offset: 12, closeButton: false, closeOnClick: false,
-                className: 'aeon-popup',
-            }).setText(label)
+                offset: 10, closeButton: false, closeOnClick: false, className: 'aeon-popup',
+            }).setHTML(`
+                <div style="font-family:Inter,sans-serif">
+                  <div style="font-weight:600;margin-bottom:3px;color:#3C4043">${label}</div>
+                  <div style="font-size:12px;color:#80868B">${speed} · ${heading}</div>
+                </div>
+            `)
 
-            vesselEl.addEventListener('mouseenter', () => marker.setPopup(popup).togglePopup())
-            vesselEl.addEventListener('mouseleave', () => popup.remove())
+            dot.addEventListener('mouseenter', () => {
+                marker.setPopup(popup).togglePopup()
+            })
+            dot.addEventListener('mouseleave', () => {
+                popup.remove()
+            })
         })
 
-        // ── Compass icon marker ─────────────────────────────────────────────
-        const compassEl = document.createElement('div')
-        compassEl.innerHTML = `<div style="width:22px;height:22px;background:rgba(0,0,0,.6);
-      border:1px solid rgba(255,255,255,.25);border-radius:50%;display:flex;
-      align-items:center;justify-content:center;color:rgba(255,255,255,.75);
-      font-size:13px;line-height:1">⬆</div>`
-        new maplibregl.Marker({ element: compassEl })
-            .setLngLat([103.85, 1.17])
-            .addTo(map)
-
-        // ── Coordinate tracking ─────────────────────────────────────────────
-        map.on('mousemove', (e) => {
-            const d = document.getElementById('coords-display')
-            if (!d) return
-            const { lat, lng } = e.lngLat
-            d.textContent = `${Math.abs(lat).toFixed(4)}° ${lat >= 0 ? 'N' : 'S'},  ${Math.abs(lng).toFixed(4)}° ${lng >= 0 ? 'E' : 'W'}`
-        })
-
-        return () => {
-            map.remove()
-            mapRef.current = null
-        }
+        return () => { map.remove(); mapRef.current = null }
     }, [])
 
     return (
-        <div style={{ position: 'absolute', inset: 0 }}>
-            {/* MapLibre container — fills entire area */}
-            <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
-
-            {/* Coords bar — bottom left */}
+        <div style={{ position: 'absolute', inset: 0, background: '#05080F', overflow: 'hidden' }}>
+            {/* Starfield layers */}
             <div style={{
-                position: 'absolute', bottom: 10, left: 60,
-                display: 'flex', alignItems: 'center', gap: 8,
-                background: 'rgba(10,13,18,0.78)',
-                border: '1px solid rgba(255,255,255,0.07)',
-                borderRadius: 4, padding: '4px 10px',
-                fontFamily: "'Courier New', monospace", fontSize: 10,
-                backdropFilter: 'blur(8px)', zIndex: 500, pointerEvents: 'none',
-            }}>
-                <span style={{ color: '#6b7a8d', fontSize: 9, letterSpacing: '0.05em' }}>AIRFILER / ORLLI.13</span>
-                <span style={{ color: 'rgba(255,255,255,0.1)' }}>|</span>
-                <span id="coords-display" style={{ color: '#00d2be', letterSpacing: '0.05em' }}>
-                    1° 13′ N,  103° 46′ E
-                </span>
-            </div>
+                position: 'absolute', inset: 0, zIndex: 0,
+                background: `
+                    radial-gradient(1px 1px at 10% 15%, rgba(255,255,255,0.8), transparent),
+                    radial-gradient(1px 1px at 25% 35%, rgba(255,255,255,0.6), transparent),
+                    radial-gradient(1px 1px at 40% 8%, rgba(255,255,255,0.7), transparent),
+                    radial-gradient(1px 1px at 55% 45%, rgba(255,255,255,0.5), transparent),
+                    radial-gradient(1px 1px at 70% 20%, rgba(255,255,255,0.9), transparent),
+                    radial-gradient(1px 1px at 85% 60%, rgba(255,255,255,0.4), transparent),
+                    radial-gradient(1px 1px at 15% 70%, rgba(255,255,255,0.6), transparent),
+                    radial-gradient(1px 1px at 30% 90%, rgba(255,255,255,0.5), transparent),
+                    radial-gradient(1px 1px at 50% 75%, rgba(255,255,255,0.7), transparent),
+                    radial-gradient(1px 1px at 65% 85%, rgba(255,255,255,0.4), transparent),
+                    radial-gradient(1px 1px at 80% 40%, rgba(255,255,255,0.8), transparent),
+                    radial-gradient(1px 1px at 95% 10%, rgba(255,255,255,0.6), transparent),
+                    radial-gradient(1.5px 1.5px at 5% 50%, rgba(200,220,255,0.9), transparent),
+                    radial-gradient(1.5px 1.5px at 45% 25%, rgba(200,220,255,0.7), transparent),
+                    radial-gradient(1.5px 1.5px at 75% 70%, rgba(200,220,255,0.8), transparent),
+                    radial-gradient(1.5px 1.5px at 92% 88%, rgba(220,200,255,0.6), transparent),
+                    radial-gradient(0.8px 0.8px at 8% 42%, rgba(255,255,255,0.3), transparent),
+                    radial-gradient(0.8px 0.8px at 22% 58%, rgba(255,255,255,0.25), transparent),
+                    radial-gradient(0.8px 0.8px at 38% 12%, rgba(255,255,255,0.3), transparent),
+                    radial-gradient(0.8px 0.8px at 52% 92%, rgba(255,255,255,0.2), transparent),
+                    radial-gradient(0.8px 0.8px at 68% 32%, rgba(255,255,255,0.35), transparent),
+                    radial-gradient(0.8px 0.8px at 82% 78%, rgba(255,255,255,0.25), transparent),
+                    radial-gradient(0.8px 0.8px at 18% 22%, rgba(255,255,255,0.3), transparent),
+                    radial-gradient(0.8px 0.8px at 33% 68%, rgba(255,255,255,0.2), transparent),
+                    radial-gradient(0.8px 0.8px at 48% 52%, rgba(255,255,255,0.35), transparent),
+                    radial-gradient(0.8px 0.8px at 63% 5%, rgba(255,255,255,0.25), transparent),
+                    radial-gradient(0.8px 0.8px at 78% 95%, rgba(255,255,255,0.3), transparent),
+                    radial-gradient(0.8px 0.8px at 88% 15%, rgba(255,255,255,0.2), transparent),
+                    radial-gradient(2px 2px at 35% 55%, rgba(180,200,255,0.5), transparent),
+                    radial-gradient(2px 2px at 60% 10%, rgba(255,220,180,0.4), transparent)
+                `,
+            }} />
 
-            {/* Replay pill — bottom centre */}
-            <div style={{
-                position: 'absolute', bottom: 10, left: '50%', transform: 'translateX(-50%)',
-                display: 'flex', alignItems: 'center', gap: 2,
-                background: 'rgba(13,17,23,0.88)',
-                border: '1px solid rgba(255,255,255,0.07)',
-                borderRadius: 20, padding: '4px 6px',
-                zIndex: 500, backdropFilter: 'blur(12px)',
-            }}>
-                {['−', '+'].map((ch) => (
-                    <button key={ch} style={{
-                        width: 24, height: 24,
-                        border: '1px solid rgba(255,255,255,0.07)',
-                        background: 'rgba(255,255,255,0.05)',
-                        color: '#8fa0b4', borderRadius: '50%',
-                        cursor: 'pointer', fontSize: 14,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}>{ch}</button>
-                ))}
-                <button style={{
-                    background: 'transparent', border: 'none',
-                    color: '#8fa0b4', fontSize: 11, padding: '4px 12px',
-                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5,
-                    fontFamily: "'Inter',sans-serif",
+            {/* Map container */}
+            <div ref={containerRef} style={{ position: 'relative', width: '100%', height: '100%', zIndex: 1, background: 'transparent' }} />
+
+            {/* SAR mode badge */}
+            {activeLayer === 'sar' && (
+                <div style={{
+                    position: 'absolute', top: 16, right: 16,
+                    display: 'flex', alignItems: 'center', gap: 8,
+                    background: 'white', borderRadius: 999,
+                    padding: '8px 16px', zIndex: 5,
+                    boxShadow: '0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15)',
+                    animation: 'fadeIn 0.2s ease both',
                 }}>
-                    <span style={{ color: '#00d2be', fontSize: 12 }}>◎</span> Replay
-                </button>
+                    <span style={{
+                        width: 8, height: 8, borderRadius: '50%', background: '#1B4D6B',
+                        animation: 'softPulse 2.5s ease-in-out infinite',
+                    }} />
+                    <span style={{ fontSize: 13, fontWeight: 500, color: '#3C4043' }}>SAR Radar Active</span>
+                </div>
+            )}
+
+            {/* AeonBlue brand — bottom-left */}
+            <div style={{
+                position: 'absolute', bottom: 12, left: 12,
+                display: 'flex', alignItems: 'center', gap: 8,
+                background: 'rgba(255,255,255,0.92)', borderRadius: 10,
+                padding: '6px 14px', zIndex: 5,
+                boxShadow: '0 1px 2px 0 rgba(60,64,67,.2)',
+                backdropFilter: 'blur(8px)',
+            }}>
+                <span style={{
+                    fontSize: 13, fontWeight: 700, color: '#1B4D6B',
+                    letterSpacing: '0.04em', fontFamily: 'Inter, sans-serif',
+                }}>AeonBlue</span>
+                <span style={{
+                    fontSize: 11, color: '#9AA0A6', fontWeight: 400,
+                    fontFamily: 'Inter, sans-serif',
+                }}>Maritime AI</span>
             </div>
         </div>
     )

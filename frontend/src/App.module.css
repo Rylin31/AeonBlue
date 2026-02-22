@@ -1,24 +1,18 @@
-.shell {
+.viewport {
     width: 100vw;
     height: 100vh;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    background: var(--bg-void);
-}
-
-.body {
-    flex: 1;
-    /* CRITICAL: without min-height:0, flex children collapse to 0px height
-     and Leaflet renders the world-view tiled across a tiny strip */
-    min-height: 0;
-    display: flex;
-    overflow: hidden;
-}
-
-.mapArea {
-    flex: 1;
-    min-width: 0;
-    /* Must be position:relative so absolute mapWrapper fills it correctly */
     position: relative;
+    overflow: hidden;
+}
+
+.overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 10;
+}
+
+/* All floating children receive pointer events */
+.overlay>* {
+    pointer-events: auto;
 }

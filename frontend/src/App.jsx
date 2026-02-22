@@ -1,32 +1,61 @@
-import { useState } from 'react'
-import TopBar from './components/TopBar'
-import Sidebar from './components/Sidebar'
+import { useState, useCallback } from 'react'
 import MapView from './components/MapView'
-import IncidentPanel from './components/IncidentPanel'
+import SearchBar from './components/SearchBar'
+import NavPillar from './components/NavPillar'
+import DetailsSheet from './components/DetailsSheet'
+import FloatingControls from './components/FloatingControls'
 import styles from './App.module.css'
 
 export default function App() {
-  const [activeNav, setActiveNav] = useState('map')
-  const [panelOpen, setPanelOpen] = useState(true)
+  const [sheetOpen, setSheetOpen] = useState(false)
+  const [activeLayer, setActiveLayer] = useState('visual')
+  const [lockedVessel, setLockedVessel] = useState(null)
+  const [mapRef, setMapRef] = useState(null)
+
+  const handleSpillClick = useCallback(() => {
+    setSheetOpen(true)
+  }, [])
+
+  const handleVesselLock = useCallback((vessel) => {
+    setLockedVessel(vessel)
+    setSheetOpen(true)
+  }, [])
+
+  const handleCloseSheet = useCallback(() => {
+    setSheetOpen(false)
+  }, [])
 
   return (
-    <div className={styles.shell}>
-      {/* Top status bar — full width */}
-      <TopBar />
+    <div className={styles.viewport}>
+      {/* Full-bleed map */}
+      <MapView
+        activeLayer={activeLayer}
+        onSpillClick={handleSpillClick}
+        onVesselLock={handleVesselLock}
+        onMapReady={setMapRef}
+      />
 
-      {/* Main body: sidebar + map + panel */}
-      <div className={styles.body}>
-        <Sidebar activeNav={activeNav} onNavChange={setActiveNav} />
+      {/* Floating UI layer */}
+      <div className={styles.overlay}>
+        {/* Top-left: Search bar + status */}
+        <SearchBar />
 
-        {/* Map takes all remaining space */}
-        <div className={styles.mapArea}>
-          <MapView />
-        </div>
+        {/* Left: Navigation pillar */}
+        <NavPillar
+          activeLayer={activeLayer}
+          onLayerChange={setActiveLayer}
+        />
 
-        {/* Incident detail panel */}
-        {panelOpen && (
-          <IncidentPanel onClose={() => setPanelOpen(false)} />
+        {/* Left: Details sheet (slides in like Google Maps) */}
+        {sheetOpen && (
+          <DetailsSheet
+            onClose={handleCloseSheet}
+            lockedVessel={lockedVessel}
+          />
         )}
+
+        {/* Bottom-right: Zoom + FAB */}
+        <FloatingControls mapRef={mapRef} />
       </div>
     </div>
   )

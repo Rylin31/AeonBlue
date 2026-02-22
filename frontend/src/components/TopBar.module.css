@@ -1,20 +1,22 @@
 .topbar {
-    height: 36px;
+    height: 40px;
     width: 100%;
-    background: var(--bg-panel);
+    background: var(--bg-panel-solid);
     border-bottom: 1px solid var(--border-subtle);
     display: flex;
     align-items: center;
-    padding: 0 16px;
+    padding: 0 20px;
     flex-shrink: 0;
     z-index: 90;
-    gap: 12px;
+    gap: 14px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
 }
 
 .statusGroup {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
+    flex-shrink: 0;
 }
 
 .pulseOuter {
@@ -27,64 +29,141 @@
 }
 
 .pulseDot {
-    width: 6px;
-    height: 6px;
+    width: 7px;
+    height: 7px;
     border-radius: 50%;
-    background: var(--teal);
-    box-shadow: 0 0 6px var(--teal);
+    background: var(--green-ok);
     position: relative;
     z-index: 1;
-    animation: blink 2.5s ease-in-out infinite;
+    animation: softPulse 3s ease-in-out infinite;
 }
 
 .pulseRing {
     position: absolute;
-    inset: 0;
+    inset: -2px;
     border-radius: 50%;
-    border: 1px solid var(--teal);
-    animation: pulse-ring 2s ease-out infinite;
+    border: 1px solid var(--green-ok);
+    animation: pulse-ring 2.5s ease-out infinite;
+    opacity: 0.4;
 }
 
 .statusLabel {
     font-size: 10px;
     font-weight: 600;
-    letter-spacing: 0.1em;
-    color: var(--teal);
-    font-family: var(--font-display);
+    letter-spacing: 0.10em;
+    color: var(--green-ok);
 }
 
 .divider {
     width: 1px;
-    height: 12px;
+    height: 14px;
     background: var(--border-subtle);
 }
 
 .utcLabel {
     font-size: 10px;
     color: var(--muted);
-    font-family: 'Courier New', monospace;
-    letter-spacing: 0.05em;
+    font-family: var(--font-mono);
+    letter-spacing: 0.04em;
+    min-width: 128px;
 }
 
-.spacer {
+/* ── Center Info ── */
+.centerInfo {
     flex: 1;
+    display: flex;
+    justify-content: center;
 }
 
+.passInfo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--muted);
+    font-size: 11px;
+}
+
+.passInfo svg {
+    color: var(--sea-blue);
+}
+
+.passText {
+    font-weight: 500;
+    color: var(--slate-light);
+    letter-spacing: 0.03em;
+}
+
+.passOrbit {
+    font-size: 9px;
+    font-family: var(--font-mono);
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    background: var(--bg-card);
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+}
+
+.connStatus {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
+}
+
+.connected {
+    color: var(--green-ok);
+    background: var(--green-dim);
+    border: 1px solid rgba(91, 166, 125, 0.15);
+}
+
+.disconnected {
+    color: var(--coral);
+    background: var(--coral-dim);
+    border: 1px solid rgba(230, 138, 138, 0.15);
+    animation: blink 1.2s ease-in-out infinite;
+}
+
+.connDot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+/* ── Brand ── */
 .brand {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.activityPill {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--sea-blue);
+    background: var(--sea-blue-dim);
+    padding: 3px 8px;
+    border-radius: var(--radius-pill);
+    border: 1px solid rgba(27, 77, 107, 0.1);
 }
 
 .brandIcon {
-    color: var(--teal);
+    color: var(--sea-blue);
 }
 
 .brandText {
     font-family: var(--font-display);
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.18em;
-    color: var(--white);
-    opacity: 0.85;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--slate);
 }

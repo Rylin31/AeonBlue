@@ -1,7 +1,7 @@
 .sidebar {
     width: var(--sidebar-w);
     height: 100%;
-    background: var(--bg-panel);
+    background: var(--bg-panel-solid);
     border-right: 1px solid var(--border-subtle);
     display: flex;
     flex-direction: column;
@@ -9,45 +9,78 @@
     padding: 12px 0;
     flex-shrink: 0;
     z-index: 100;
-}
-
-.logo {
-    width: 36px;
-    height: 36px;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.logoMark {
-    width: 30px;
-    height: 30px;
-    border: 2px solid var(--teal);
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     position: relative;
-    box-shadow: 0 0 12px var(--teal-glow);
+    box-shadow: 2px 0 12px rgba(0, 0, 0, 0.03);
 }
 
-.logoInner {
-    display: block;
-    width: 14px;
-    height: 14px;
-    background: var(--teal);
-    clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
-    opacity: 0.9;
+/* ── Active Anomaly Button ── */
+.anomalyBtn {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-md);
+    transition: var(--transition);
 }
 
+.anomalyBtn:hover {
+    background: var(--sea-blue-dim);
+}
+
+.anomalyIcon {
+    color: var(--sea-blue);
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.anomalyBtn:hover .anomalyIcon {
+    transform: scale(1.1);
+}
+
+.anomalyPulse {
+    position: absolute;
+    inset: 4px;
+    border-radius: var(--radius-md);
+    border: 1.5px solid var(--sea-blue);
+    opacity: 0;
+    animation: anomalyPulseAnim 3s ease-out infinite;
+}
+
+@keyframes anomalyPulseAnim {
+    0% {
+        transform: scale(0.85);
+        opacity: 0.4;
+    }
+
+    100% {
+        transform: scale(1.3);
+        opacity: 0;
+    }
+}
+
+/* ── Separator ── */
+.separator {
+    width: 24px;
+    height: 1px;
+    background: var(--border-subtle);
+    margin: 8px 0;
+}
+
+/* ── Nav ── */
 .nav {
     display: flex;
     flex-direction: column;
     gap: 4px;
     flex: 1;
     align-items: center;
-    padding-top: 8px;
+    padding-top: 4px;
 }
 
 .bottom {
@@ -60,8 +93,8 @@
 
 .navBtn {
     position: relative;
-    width: 36px;
-    height: 36px;
+    width: 38px;
+    height: 38px;
     border: none;
     background: transparent;
     color: var(--muted);
@@ -74,13 +107,13 @@
 }
 
 .navBtn:hover {
-    color: var(--teal);
-    background: var(--teal-glow);
+    color: var(--sea-blue);
+    background: var(--sea-blue-dim);
 }
 
 .navBtn.active {
-    color: var(--teal);
-    background: rgba(0, 210, 190, 0.1);
+    color: var(--sea-blue);
+    background: var(--sea-blue-dim);
 }
 
 .activeBar {
@@ -88,9 +121,281 @@
     left: 0;
     top: 50%;
     transform: translateY(-50%);
-    width: 2px;
+    width: 3px;
     height: 18px;
-    background: var(--teal);
-    border-radius: 0 2px 2px 0;
-    box-shadow: 0 0 8px var(--teal);
+    background: var(--sea-blue);
+    border-radius: 0 3px 3px 0;
+}
+
+/* ── Badge ── */
+.badge {
+    position: absolute;
+    top: 4px;
+    right: 3px;
+    width: 15px;
+    height: 15px;
+    background: var(--coral);
+    border-radius: 50%;
+    font-size: 8px;
+    font-weight: 700;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    border: 2px solid var(--bg-panel-solid);
+}
+
+/* ── Status Dot (Profile) ── */
+.statusDot {
+    position: absolute;
+    bottom: 6px;
+    right: 6px;
+    width: 7px;
+    height: 7px;
+    background: var(--green-ok);
+    border-radius: 50%;
+    border: 2px solid var(--bg-panel-solid);
+}
+
+/* ── Drawer ── */
+.drawer {
+    position: absolute;
+    left: calc(var(--sidebar-w) + 1px);
+    top: 8px;
+    bottom: 8px;
+    width: 260px;
+    background: var(--bg-panel);
+    backdrop-filter: blur(24px) saturate(150%);
+    -webkit-backdrop-filter: blur(24px) saturate(150%);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    display: flex;
+    flex-direction: column;
+    z-index: 200;
+    box-shadow: var(--shadow-xl);
+    overflow: hidden;
+}
+
+.historyDrawer {
+    width: 300px;
+}
+
+.drawerHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 16px 14px;
+    border-bottom: 1px solid var(--border-subtle);
+    flex-shrink: 0;
+}
+
+.drawerTitle {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    text-transform: uppercase;
+}
+
+.drawerClose {
+    width: 22px;
+    height: 22px;
+    border: 1px solid var(--border-subtle);
+    background: transparent;
+    color: var(--muted);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.drawerClose:hover {
+    background: var(--coral-dim);
+    color: var(--coral);
+    border-color: rgba(230, 138, 138, 0.2);
+}
+
+.drawerFooter {
+    padding: 12px 16px;
+    border-top: 1px solid var(--border-subtle);
+    flex-shrink: 0;
+}
+
+.drawerFooterText {
+    font-size: 10px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    letter-spacing: 0.03em;
+}
+
+/* ── Layers ── */
+.layersList {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.layerItem {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 12px;
+    border: 1px solid transparent;
+    background: transparent;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: var(--transition);
+    text-align: left;
+    color: var(--muted-light);
+}
+
+.layerItem:hover {
+    background: var(--bg-card);
+    border-color: var(--border-subtle);
+}
+
+.layerActive {
+    background: var(--sea-blue-dim) !important;
+    border-color: var(--border-accent) !important;
+    color: var(--slate);
+}
+
+.layerIconWrap {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: var(--transition);
+}
+
+.layerActive .layerIconWrap {
+    background: var(--sea-blue-dim);
+    border-color: var(--border-accent);
+    color: var(--sea-blue);
+}
+
+.layerInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+}
+
+.layerLabel {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--slate);
+    letter-spacing: 0.02em;
+}
+
+.layerDesc {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.01em;
+}
+
+.layerCheck {
+    color: var(--sea-blue);
+    font-size: 8px;
+    flex-shrink: 0;
+}
+
+/* ── Cold Cases ── */
+.coldCasesList {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.coldCase {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid var(--border-subtle);
+    background: var(--white);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: var(--transition);
+    text-align: left;
+    color: var(--muted-light);
+}
+
+.coldCase:hover {
+    background: var(--bg-card);
+    border-color: var(--border-medium);
+    box-shadow: var(--shadow-sm);
+}
+
+.coldCase:hover .coldCaseArrow {
+    color: var(--sea-blue);
+    transform: translateX(2px);
+}
+
+.coldCaseTop {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.coldCaseId {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--slate);
+    letter-spacing: 0.03em;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.severityDot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.coldCaseArrow {
+    color: var(--muted);
+    transition: var(--transition);
+}
+
+.coldCaseMeta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--muted);
+}
+
+.coldCaseMeta span {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.coldCaseDate {
+    font-size: 10px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    letter-spacing: 0.03em;
 }

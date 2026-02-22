@@ -1,0 +1,96 @@
+.wrapper {
+    position: absolute;
+    top: 16px;
+    left: 72px;
+    z-index: 20;
+}
+
+.bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 48px;
+    padding: 0 8px 0 16px;
+    background: var(--white);
+    border-radius: var(--radius-pill);
+    box-shadow: var(--shadow-2);
+    min-width: 400px;
+    max-width: 520px;
+    transition: var(--transition);
+}
+
+.focused {
+    box-shadow: var(--shadow-3);
+}
+
+.icon {
+    color: var(--muted);
+    flex-shrink: 0;
+}
+
+.input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-family: var(--font-main);
+    font-size: 14px;
+    color: var(--slate);
+    min-width: 0;
+}
+
+.input::placeholder {
+    color: var(--muted);
+}
+
+.clearBtn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition);
+    flex-shrink: 0;
+}
+
+.clearBtn:hover {
+    background: var(--surface);
+    color: var(--slate);
+}
+
+.divider {
+    width: 1px;
+    height: 24px;
+    background: var(--divider);
+    flex-shrink: 0;
+}
+
+.statusPill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px 6px 10px;
+    border-radius: var(--radius-pill);
+    flex-shrink: 0;
+    cursor: default;
+}
+
+.statusDot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--green-ok);
+    animation: softPulse 3s ease-in-out infinite;
+}
+
+.statusText {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--slate-light);
+    white-space: nowrap;
+}
