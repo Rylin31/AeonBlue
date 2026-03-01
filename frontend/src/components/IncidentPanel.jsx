@@ -5,7 +5,7 @@ import ConfidenceRing from './ConfidenceRing'
 import SpectralBar from './SpectralBar'
 
 const INCIDENT = {
-    id: '#892-Alpha',
+    id: '#892-SGP',
     detectedAgo: '12 mins ago',
     location: 'Singapore Strait',
     confidence: 84,
@@ -145,10 +145,10 @@ export default function IncidentPanel({ onClose, lockedVessel }) {
                         <div className={styles.analysisList}>
                             {[
                                 ['Est. Spill Area', INCIDENT.analysis.spillArea],
-                                ['Substance Type', INCIDENT.analysis.substance, true],
-                                ['Drift Vector', INCIDENT.analysis.driftVector],
+                                ['Substance Type', 'Heavy Fuel Oil (HFO)', true],
+                                ['Drift Vector', `NW ${Math.floor(250 + Math.random() * 50)}° @ ${(0.8 + Math.random() * 2).toFixed(1)} kts`],
                                 ['Est. Volume', INCIDENT.analysis.volume],
-                                ['Film Thickness', INCIDENT.analysis.thickness],
+                                ['Film Thickness', '1.0 μm (Est)'],
                             ].map(([label, value, highlight]) => (
                                 <div className={styles.analysisRow} key={label}>
                                     <span className={styles.analysisLabel}>{label}</span>

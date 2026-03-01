@@ -135,7 +135,7 @@
 .historyPanel {
     position: absolute;
     left: calc(100% + 10px);
-    top: -50px;
+    top: 0;
     width: 340px;
     max-height: 460px;
     background: var(--white);

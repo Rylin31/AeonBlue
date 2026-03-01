@@ -1,0 +1,24 @@
+# Web framework
+fastapi
+uvicorn
+
+# Scientific & Spatial Analysis
+numpy
+pandas
+geopandas
+xarray
+
+# OpenDrift for Lagrangian tracking
+opendrift
+
+# Database
+SQLAlchemy
+geoalchemy2
+psycopg2-binary
+
+# PDF Generation
+reportlab
+
+# Image Processing (SAR, AI Masks)
+Pillow
+rasterio

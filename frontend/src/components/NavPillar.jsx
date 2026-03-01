@@ -8,14 +8,14 @@ const LAYER_OPTIONS = [
 ]
 
 const ALERT_HISTORY = [
-    { id: '#892-Alpha', location: 'Singapore Strait', area: '4.2 km²', date: '2026-02-22', vessel: 'MV Neptune' },
-    { id: '#847-Bravo', location: 'Makassar Strait', area: '1.7 km²', date: '2026-02-19', vessel: 'Unknown' },
-    { id: '#831-Charlie', location: 'Malacca Strait', area: '0.4 km²', date: '2026-02-15', vessel: 'MV Oceanic Star' },
-    { id: '#798-Delta', location: 'South China Sea', area: '6.1 km²', date: '2026-02-10', vessel: 'MV Karina' },
-    { id: '#764-Echo', location: 'Java Sea', area: '2.3 km²', date: '2026-02-03', vessel: 'MV Bulk Carrier IV' },
+    { id: '#892-SGP', location: 'Singapore Strait', area: '4.2 km²', date: '2026-02-22', vessel: 'MV Neptune', coords: [103.82, 1.22] },
+    { id: '#847-IDN', location: 'Makassar Strait', area: '1.7 km²', date: '2026-02-19', vessel: 'Unknown', coords: [118.2, -2.1] },
+    { id: '#831-MYS', location: 'Malacca Strait', area: '0.4 km²', date: '2026-02-15', vessel: 'MV Oceanic Star', coords: [99.5, 3.8] },
+    { id: '#798-VNM', location: 'South China Sea', area: '6.1 km²', date: '2026-02-10', vessel: 'MV Karina', coords: [112.0, 10.0] },
+    { id: '#764-IDN', location: 'Java Sea', area: '2.3 km²', date: '2026-02-03', vessel: 'MV Bulk Carrier IV', coords: [110.0, -5.0] },
 ]
 
-export default function NavPillar({ activeLayer, onLayerChange }) {
+export default function NavPillar({ activeLayer, onLayerChange, onAlertClick }) {
     const [layerPopup, setLayerPopup] = useState(false)
     const [historyOpen, setHistoryOpen] = useState(false)
     const panelRef = useRef(null)
@@ -64,7 +64,10 @@ export default function NavPillar({ activeLayer, onLayerChange }) {
                         </div>
                         <div className={styles.historyList}>
                             {ALERT_HISTORY.map((alert) => (
-                                <button key={alert.id} className={styles.alertCard}>
+                                <button key={alert.id} className={styles.alertCard} onClick={() => {
+                                    setHistoryOpen(false);
+                                    if (onAlertClick) onAlertClick(alert);
+                                }}>
                                     <div className={styles.alertTop}>
                                         <span className={styles.alertId}>{alert.id}</span>
                                         <span className={styles.alertDate}>{alert.date}</span>

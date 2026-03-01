@@ -1,0 +1,123 @@
+{
+  "status": "success",
+  "message": "Pixels-to-Proof workflow execution completed.",
+  "data": {
+    "sar_processing": {
+      "image_id": "ZENODO_S1A_IW_GRDH_1SDV_0001",
+      "gps_coordinates": {
+        "lon": 103.82,
+        "lat": 1.22
+      },
+      "mask_path": "E:/VS Code/Projects/AeonBlue/ai/dataset/zenodo/Mask/Oil\\00123_segmentation.tif",
+      "metrics": {
+        "white_pixels_count": 0,
+        "total_area_m2": 0.0,
+        "volume_m3": 0.0,
+        "volume_liters": 0.0
+      },
+      "polygon": [
+        [
+          103.82,
+          1.22
+        ],
+        [
+          103.82,
+          1.22
+        ]
+      ],
+      "bounds": [
+        [
+          103.72781901154191,
+          1.3121600921600922
+        ],
+        [
+          103.91218098845808,
+          1.3121600921600922
+        ],
+        [
+          103.91218098845808,
+          1.1278399078399077
+        ],
+        [
+          103.72781901154191,
+          1.1278399078399077
+        ]
+      ],
+      "image_url": "http://localhost:8000/reports/sar_overlay_00123.jpg",
+      "status": "Processed"
+    },
+    "lagrangian_backtracking": {
+      "origin_point": {
+        "lon": 103.75433978427057,
+        "lat": 1.2738633068907201
+      },
+      "wake_path_geojson": "{\"type\": \"FeatureCollection\", \"features\": [{\"type\": \"Feature\", \"properties\": {\"type\": \"Wake Path\"}, \"geometry\": {\"type\": \"LineString\", \"coordinates\": [[103.75433978427057, 1.2738633068907201], [103.82, 1.22]]}}]}",
+      "leak_start_time": "2023-11-03T12:00:00"
+    },
+    "ais_correlation": {
+      "attributed_vessels": [
+        {
+          "vessel_name": "MV NEPTUNE",
+          "mmsi": "271551592",
+          "imo_number": "IMO9626183",
+          "flag": "Bahamas (BS)",
+          "speed_knots": 15.2,
+          "type": "Container Ship",
+          "heading": "233\u00b0",
+          "distance_to_origin_m": 464,
+          "timestamp": "2023-11-03T12:00:00",
+          "probability_score_percent": 100
+        },
+        {
+          "vessel_name": "BW TULIP",
+          "mmsi": "555462632",
+          "imo_number": "IMO8911392",
+          "flag": "Malta (MT)",
+          "speed_knots": 0.9,
+          "type": "Oil/Chemical Tanker",
+          "heading": "121\u00b0",
+          "distance_to_origin_m": 929,
+          "timestamp": "2023-11-03T12:00:00",
+          "probability_score_percent": 58.55
+        }
+      ],
+      "intersection_time": "2023-11-03T12:00:00"
+    },
+    "reporting": {
+      "report_path": "AeonBlue_Evidential_Packet_ZENODO_S1A_IW_GRDH_1SDV_0001_20260224_010559.pdf",
+      "report_summary": {
+        "title": "Forensic Evidence Report: ZENODO_S1A_IW_GRDH_1SDV_0001",
+        "generated_at": "20260224_010559",
+        "visual_evidence": {
+          "sar_image_id": "ZENODO_S1A_IW_GRDH_1SDV_0001",
+          "mask_path": "E:/VS Code/Projects/AeonBlue/ai/dataset/zenodo/Mask/Oil\\00123_segmentation.tif",
+          "total_area_m2": 0.0,
+          "estimated_volume_liters": 0.0
+        },
+        "physics_proof": {
+          "origin_point": {
+            "lon": 103.75433978427057,
+            "lat": 1.2738633068907201
+          },
+          "leak_start_time": "2023-11-03T12:00:00",
+          "wake_path_geojson": "Included as GeoJSON overlay plot in final PDF"
+        },
+        "attribution_proof": {
+          "intersection_time": "2023-11-03T12:00:00",
+          "attributed_vessel": {
+            "vessel_name": "MV NEPTUNE",
+            "mmsi": "271551592",
+            "imo_number": "IMO9626183",
+            "flag": "Bahamas (BS)",
+            "speed_knots": 15.2,
+            "type": "Container Ship",
+            "heading": "233\u00b0",
+            "distance_to_origin_m": 464,
+            "timestamp": "2023-11-03T12:00:00",
+            "probability_score_percent": 100
+          }
+        }
+      }
+    }
+  }
+}

@@ -30,3 +30,26 @@ pnpm-debug.log*
 
 # Cache
 .vite/
+
+# Python Virtual Environments
+venv/
+env/
+.env/
+myenv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Forensic Data Reports
+backend/Forensic_Reports/
+*.pdf
+
+# Downloaded Geo-spatial files
+backend/DataSet/Raw/
+backend/DataSet/Mask/
+backend/data/
+*.tif
+*.nc
+*.grib
+ai/
+*test*.py

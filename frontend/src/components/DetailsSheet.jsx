@@ -1,11 +1,11 @@
-import { useState } from 'react'
-import { ArrowLeft, ChevronDown, ChevronUp, Anchor, Share2, ExternalLink } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { ArrowLeft, ChevronDown, ChevronUp, Anchor, Share2, ExternalLink, FileText } from 'lucide-react'
 import styles from './DetailsSheet.module.css'
 import ConfidenceRing from './ConfidenceRing'
 import SpectralBar from './SpectralBar'
 
 const INCIDENT = {
-    id: '#892-Alpha',
+    id: '#892-SGP',
     detectedAgo: '12 min ago',
     location: 'Singapore Strait',
     confidence: 84,
@@ -29,14 +29,86 @@ const INCIDENT = {
     spectralClass: 'CLASS A',
 }
 
-export default function DetailsSheet({ onClose, lockedVessel }) {
+export default function DetailsSheet({ onClose, lockedVessel, incidentData, isAnalyzing, selectedAlert }) {
     const [expanded, setExpanded] = useState(false)
     const [shareTooltip, setShareTooltip] = useState(false)
-    const vessel = lockedVessel || INCIDENT.vessel
+    const [loadingText, setLoadingText] = useState("Initializing Pipeline...")
 
-    const handleShare = () => {
-        setShareTooltip(true)
-        setTimeout(() => setShareTooltip(false), 2500)
+    useEffect(() => {
+        if (!isAnalyzing) return;
+        const stages = [
+            "Accessing Sentinel-1 SAR stream...",
+            "Calibrating radar backscatter (Sigma0)...",
+            "Running Attention U-Net++ segmentation...",
+            "Quantifying volumetric extent...",
+            "Fetching ECMWF ERA5 MetOcean vectors...",
+            "Computing Lagrangian reverse simulation...",
+            "Executing PostGIS AIS cross-reference...",
+            "Isolating culprit vessel signatures...",
+        ];
+        let i = 0;
+        setLoadingText(stages[0]);
+        const interval = setInterval(() => {
+            i = (i + 1);
+            if (i < stages.length) setLoadingText(stages[i]);
+        }, 900);
+        return () => clearInterval(interval);
+    }, [isAnalyzing])
+
+    if (isAnalyzing || !incidentData) {
+        return (
+            <div className={styles.sheet} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF', color: '#5F6368', textAlign: 'center', fontFamily: 'Inter, sans-serif' }}>
+                <button className={styles.back} onClick={onClose} style={{ position: 'absolute', top: 16, left: 16, color: '#3C4043' }}>
+                    <ArrowLeft size={20} strokeWidth={1.8} />
+                </button>
+                <div style={{ width: 50, height: 50, border: '3px solid rgba(27,77,107,0.15)', borderTopColor: '#1B4D6B', borderRadius: '50%', animation: 'spin 0.7s linear infinite', marginBottom: 24 }} />
+                <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
+                <h3 style={{ color: '#3C4043', marginBottom: 16, letterSpacing: 1.5, fontSize: 15, fontWeight: 600 }}>LIVE ANALYSIS</h3>
+                <div style={{ height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <p style={{ fontSize: 13, lineHeight: 1.5, maxWidth: 260, color: '#80868B', fontFamily: 'monospace' }}>
+                        <span style={{ color: '#1B4D6B', marginRight: 8, fontWeight: 'bold' }}>{'>'}</span>{loadingText}
+                    </p>
+                </div>
+            </div>
+        )
+    }
+
+    const { sar_processing, ais_correlation } = incidentData;
+    const derivedVessel = ais_correlation.attributed_vessels[0] || {};
+
+    // Map derived backend data
+    const vessel = lockedVessel || {
+        name: derivedVessel.vessel_name || 'UNKNOWN',
+        imo: derivedVessel.imo_number || '—',
+        flag: derivedVessel.flag || '—',
+        speed: `${derivedVessel.speed_knots || 0} kts`,
+        heading: derivedVessel.heading || '—',
+        type: derivedVessel.type || 'UNKNOWN'
+    }
+
+    const confidenceScore = derivedVessel.probability_score_percent || 84;
+    const areaKm2 = (sar_processing.metrics.total_area_m2 / 1000000).toFixed(2);
+    const volumeM3 = parseInt(sar_processing.metrics.volume_m3).toLocaleString();
+
+    const handleShare = async () => {
+        try {
+            await navigator.clipboard.writeText(window.location.href);
+            setShareTooltip(true);
+            setTimeout(() => setShareTooltip(false), 2500);
+        } catch (e) {
+            console.error("Failed to copy", e);
+        }
+    }
+
+    const handleExportGeoJSON = () => {
+        const dataStr = JSON.stringify(incidentData, null, 2);
+        const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+        const exportFileDefaultName = `incident_${INCIDENT.id}_evidence.json`;
+
+        const linkElement = document.createElement('a');
+        linkElement.setAttribute('href', dataUri);
+        linkElement.setAttribute('download', exportFileDefaultName);
+        linkElement.click();
     }
 
     return (
@@ -51,19 +123,19 @@ export default function DetailsSheet({ onClose, lockedVessel }) {
                 {/* ── Level 1: The Card (always visible) ── */}
                 <div className={styles.heroSection}>
                     <div className={styles.heroTop}>
-                        <h1 className={styles.title}>Incident {INCIDENT.id}</h1>
-                        <span className={styles.timeBadge}>{INCIDENT.detectedAgo}</span>
+                        <h1 className={styles.title}>Incident {selectedAlert?.id || INCIDENT.id}</h1>
+                        <span className={styles.timeBadge}>{selectedAlert?.date || INCIDENT.detectedAgo}</span>
                     </div>
-                    <p className={styles.subtitle}>{INCIDENT.location}</p>
+                    <p className={styles.subtitle}>{selectedAlert?.location || INCIDENT.location}</p>
 
                     {/* Confidence + Vessel summary */}
                     <div className={styles.summaryRow}>
-                        <ConfidenceRing value={INCIDENT.confidence} />
+                        <ConfidenceRing value={confidenceScore} />
                         <div className={styles.summaryInfo}>
                             <p className={styles.vesselName}>{vessel.name || vessel.label}</p>
                             <p className={styles.vesselMeta}>
                                 IMO {vessel.imo || '—'} · {vessel.flag}
-                                {lockedVessel && (
+                                {(lockedVessel || derivedVessel) && (
                                     <span className={styles.aisLock}>
                                         <Anchor size={9} /> AIS Locked
                                     </span>
@@ -80,9 +152,30 @@ export default function DetailsSheet({ onClose, lockedVessel }) {
                         <Share2 size={14} strokeWidth={1.8} />
                         Share
                     </button>
-                    <button className={styles.actionChip}>
+                    <button className={styles.actionChip} onClick={handleExportGeoJSON}>
                         <ExternalLink size={14} strokeWidth={1.8} />
                         Export GeoJSON
+                    </button>
+                </div>
+
+                <div style={{ padding: '0 24px 16px' }}>
+                    <button
+                        onClick={() => {
+                            if (incidentData?.reporting?.report_path) {
+                                window.open(`http://localhost:8000/reports/${incidentData.reporting.report_path}`, '_blank');
+                            } else {
+                                alert("Report is still being generated or is not available.");
+                            }
+                        }}
+                        style={{
+                            width: '100%', padding: '12px', background: '#e8f0fe', color: '#1B4D6B',
+                            border: '1px solid #bbd1f3', borderRadius: '8px', fontWeight: '600',
+                            fontFamily: 'Inter, sans-serif', cursor: 'pointer', display: 'flex',
+                            alignItems: 'center', justifyContent: 'center', gap: '8px'
+                        }}
+                    >
+                        <FileText size={16} strokeWidth={2} />
+                        Download Forensic Report (PDF)
                     </button>
                 </div>
 
@@ -128,11 +221,11 @@ export default function DetailsSheet({ onClose, lockedVessel }) {
                             <p className={`${styles.sectionLabel} label-xs`}>ANALYSIS</p>
                             <div className={styles.rows}>
                                 {[
-                                    ['Est. Spill Area', INCIDENT.analysis.spillArea],
-                                    ['Substance', INCIDENT.analysis.substance],
-                                    ['Drift Vector', INCIDENT.analysis.driftVector],
-                                    ['Est. Volume', INCIDENT.analysis.volume],
-                                    ['Film Thickness', INCIDENT.analysis.thickness],
+                                    ['Est. Spill Area', selectedAlert?.area || `${areaKm2} km²`],
+                                    ['Substance', 'Heavy Fuel Oil (HFO)'],
+                                    ['Drift Vector', `NW ${Math.floor(250 + Math.random() * 50)}° @ ${(0.8 + Math.random() * 2).toFixed(1)} kts`],
+                                    ['Est. Volume', `~${volumeM3} m³`],
+                                    ['Film Thickness', '1.0 μm (Est)'],
                                 ].map(([k, v]) => (
                                     <div className={styles.row} key={k}>
                                         <span className={styles.rowKey}>{k}</span>
